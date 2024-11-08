@@ -1,12 +1,12 @@
 [package]
-name = "basic"
+name = "evm_wallet"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "basic"
+name = "evm_wallet"
 
 [features]
 no-entrypoint = []
@@ -17,5 +17,9 @@ default = []
 idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
-anchor-lang = "0.30.0"
+anchor-lang = {version = "0.30.0", features=["init-if-needed"]}
 solana-nostd-secp256k1-recover = "0.1.1"
+sha3 = { version = "0.10.8" }
+solana-secp256k1 = { version = "0.1.2" }
+hex = "0.4"
+hex-literal = "0.4.1"

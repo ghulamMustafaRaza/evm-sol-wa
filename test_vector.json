@@ -1,0 +1,7 @@
+{
+  "private_key": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "address": "fcad0b19bb29d4674531d6f115237e16afce377c",
+  "message_string": "EVM Wallet Transaction\nNonce: 1\n\nActions to perform:\n1. Transfer 1000000000 SOL to recipient 11111111111111111111111111111111\n\nWARNING: Only sign this message if you trust the source and have verified the contents.",
+  "message_hash": "582df94f2f1fa406c7101d2c479fb9a6fbe87d654ec9af4fc494761452d22415",
+  "signature": "b1385e207ed3c901d0e8e13843d5b81b36cd057de35c9c224f29701932eed54928e4482309eafe4d8a53599dc57870f2543b5f1992e7678386f4e27234b393921b"
+}
