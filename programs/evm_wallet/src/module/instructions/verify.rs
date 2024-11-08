@@ -64,17 +64,22 @@ pub fn verify_signature(
     signature: [u8; 65],
 ) -> Result<()> {
     let wallet = &mut ctx.accounts.wallet_state;
+    msg!(
+        "signatures: {:?}, {}",
+        wallet.recent_signatures.inner.map(|data| hex::encode(data)),
+        hex::encode(signature)
+    );
+    // Check signature replay
+    require!(
+        !wallet.has_signature(&signature),
+        WalletError::ReplayDetected
+    );
     // Check nonce
     require!(
         message.nonce > wallet.nonce,
         WalletError::InvalidInstructionSequence
     );
 
-    // Check signature replay
-    require!(
-        !wallet.has_signature(&signature),
-        WalletError::ReplayDetected
-    );
     // Get message hash
     let message_hash = message.get_eth_message()?;
     let message_hash: [u8; 32] = message_hash

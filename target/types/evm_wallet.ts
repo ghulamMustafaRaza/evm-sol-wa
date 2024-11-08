@@ -177,7 +177,7 @@ export type EvmWallet = {
                     65
                   ]
                 },
-                2
+                8
               ]
             }
           }

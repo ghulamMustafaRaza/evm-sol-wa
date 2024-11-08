@@ -1,10 +1,9 @@
 
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, ComputeBudgetProgram } from "@solana/web3.js";
 import { EthereumSigner } from "./utils/ethereum";
 import { EvmWallet } from '../target/types/evm_wallet';
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 
 describe("evm-wallet", () => {
@@ -19,7 +18,10 @@ describe("evm-wallet", () => {
 
   let walletStatePda: PublicKey;
   let walletBump: number;
-
+  const recipient = Keypair.generate().publicKey;
+  const computeIx = ComputeBudgetProgram.setComputeUnitLimit({
+    units: 400_000
+  });
   beforeAll(() => {
     // Find PDA for wallet state
     const ethAddress = Buffer.from(signer.getAddress().slice(2), 'hex');
@@ -31,7 +33,6 @@ describe("evm-wallet", () => {
 
   it("Can verify signature and create wallet", async () => {
     // Create test message
-    const recipient = Keypair.generate().publicKey;
     const message = {
       nonce: new anchor.BN(1),
       actions: [{
@@ -55,6 +56,7 @@ describe("evm-wallet", () => {
         .accounts({
           payer: provider.wallet.publicKey,
         })
+        .preInstructions([computeIx])
         .rpc();
 
       // Verify wallet state
@@ -70,7 +72,6 @@ describe("evm-wallet", () => {
 
   it("Prevents replay attacks", async () => {
     // Use the same message and signature from previous test
-    const recipient = Keypair.generate().publicKey;
     const message = {
       nonce: new anchor.BN(1),  // Same nonce
       actions: [{
@@ -93,6 +94,7 @@ describe("evm-wallet", () => {
         .accounts({
           payer: provider.wallet.publicKey,
         })
+        .preInstructions([computeIx])
         .rpc()
     ).rejects.toThrow(/ReplayDetected/);
 
@@ -126,6 +128,7 @@ describe("evm-wallet", () => {
         .accounts({
           payer: provider.wallet.publicKey,
         })
+        .preInstructions([computeIx])
         .rpc()
     ).rejects.toThrow(/InvalidInstructionSequence/);
 
@@ -157,6 +160,7 @@ describe("evm-wallet", () => {
       .accounts({
         payer: provider.wallet.publicKey,
       })
+      .preInstructions([computeIx])
       .rpc();
 
     // Verify nonce was updated
