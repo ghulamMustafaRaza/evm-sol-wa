@@ -27,3 +27,6 @@ upgradeable = false
 bind_address = "127.0.0.1"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
+
+[toolchain]
+anchor_version = "0.30.0"

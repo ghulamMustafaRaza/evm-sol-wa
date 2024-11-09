@@ -1,7 +1,6 @@
 import { ethers, SigningKey } from "ethers";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export interface Action {
     transfer: {
@@ -12,7 +11,7 @@ export interface Action {
 }
 
 export interface VerifiableMessage {
-    nonce: BN;
+    nonce: number;
     actions: Action[];
 }
 
@@ -33,9 +32,6 @@ export class EthereumSigner {
 
         const messageString = this.formatMessage(message);
         const sig = await this.wallet.signMessage(messageString);
-        console.log("messageString", messageString)
-        console.log("sig", sig)
-        console.log("address", this.getAddress())
         return sig;
     }
 

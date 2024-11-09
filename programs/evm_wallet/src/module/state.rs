@@ -2,15 +2,15 @@ use super::*;
 use anchor_lang::prelude::*;
 use sha3::{Digest, Keccak256};
 
-// #[account(zero_copy(unsafe))]
-// #[repr(C)]
-#[account]
+#[account(zero_copy(unsafe))]
+#[repr(C)]
+// #[account]
 #[derive(Default)]
 pub struct WalletState {
     /// The Ethereum address that owns this wallet
     pub eth_address: [u8; 20],
     /// Current nonce for transaction ordering
-    pub nonce: u64,
+    pub nonce: u32,
     /// Fixed array of recent signatures for replay protection
     pub recent_signatures: RecentTransactions,
     /// Current index in the signature array (circular buffer)
@@ -19,12 +19,13 @@ pub struct WalletState {
     pub num_signatures: u8,
     /// Bump seed for PDA derivation
     pub bump: u8,
-    /// Reserved for future use
-    pub _padding: [u8; 5], // Align to 8 bytes
 }
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct RecentTransactions {
     pub inner: [[u8; 65]; SIGNATURE_QUEUE_SIZE],
+}
+impl RecentTransactions {
+    pub const LEN: usize = 65 * SIGNATURE_QUEUE_SIZE;
 }
 impl Default for RecentTransactions {
     fn default() -> Self {
@@ -34,27 +35,11 @@ impl Default for RecentTransactions {
     }
 }
 
-// Message structures remain AnchorSerialize/Deserialize since they're passed as instruction data
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct VerifiableMessage {
-    pub nonce: u64,
-    pub actions: Vec<Action>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub enum Action {
-    Transfer {
-        amount: u64,
-        recipient: Pubkey,
-        mint: Option<Pubkey>,
-    },
-}
-
 impl WalletState {
     pub const LEN: usize = 8 + // discriminator
                           20 + // eth_address
                           8 +  // nonce
-                          (65 * SIGNATURE_QUEUE_SIZE) + // fixed size signature array
+                          RecentTransactions::LEN + // fixed size signature array
                           1 +  // current_index
                           1 +  // num_signatures
                           1 +  // bump
@@ -92,6 +77,22 @@ impl WalletState {
         }
         false
     }
+}
+
+// Message structures remain AnchorSerialize/Deserialize since they're passed as instruction data
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct VerifiableMessage {
+    pub nonce: u32,
+    pub actions: Vec<Action>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub enum Action {
+    Transfer {
+        amount: u64,
+        recipient: Pubkey,
+        mint: Option<Pubkey>,
+    },
 }
 
 impl VerifiableMessage {

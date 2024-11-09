@@ -171,7 +171,7 @@
                     65
                   ]
                 },
-                8
+                20
               ]
             }
           }
@@ -185,7 +185,7 @@
         "fields": [
           {
             "name": "nonce",
-            "type": "u64"
+            "type": "u32"
           },
           {
             "name": "actions",
@@ -202,6 +202,10 @@
     },
     {
       "name": "WalletState",
+      "serialization": "bytemuckunsafe",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "struct",
         "fields": [
@@ -222,7 +226,7 @@
             "docs": [
               "Current nonce for transaction ordering"
             ],
-            "type": "u64"
+            "type": "u32"
           },
           {
             "name": "recent_signatures",
@@ -255,18 +259,6 @@
               "Bump seed for PDA derivation"
             ],
             "type": "u8"
-          },
-          {
-            "name": "_padding",
-            "docs": [
-              "Reserved for future use"
-            ],
-            "type": {
-              "array": [
-                "u8",
-                5
-              ]
-            }
           }
         ]
       }

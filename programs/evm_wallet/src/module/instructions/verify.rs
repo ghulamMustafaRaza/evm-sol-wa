@@ -1,10 +1,27 @@
 use super::super::*;
-use anchor_lang::prelude::*;
 use anchor_lang::solana_program::secp256k1_program::ID as SECP256K1_PROGRAM_ID;
+use anchor_lang::{prelude::*, Discriminator};
 use solana_nostd_secp256k1_recover::secp256k1_recover;
 
 use sha3::{Digest, Keccak256};
 // Helper function to verify signatures
+
+macro_rules! array_ref {
+    ($arr:expr, $offset:expr, $len:expr) => {{
+        {
+            #[inline]
+            unsafe fn as_array<T>(slice: &[T]) -> &[T; $len] {
+                &*(slice.as_ptr() as *const [_; $len])
+            }
+            let offset = $offset;
+            let slice = &$arr[offset..offset + $len];
+            #[allow(unused_unsafe)]
+            unsafe {
+                as_array(slice)
+            }
+        }
+    }};
+}
 fn verify_eth_signature(
     message: &[u8; 32],
     signature: &[u8; 65],
@@ -42,11 +59,11 @@ pub struct VerifySignature<'info> {
             WALLET_SEED_PREFIX,
             eth_address.as_ref()
         ],
-        bump,
+        payer = payer,
         space = WalletState::LEN,
-        payer = payer
+        bump
     )]
-    pub wallet_state: Account<'info, WalletState>,
+    pub wallet_state: AccountLoader<'info, WalletState>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -63,12 +80,18 @@ pub fn verify_signature(
     message: VerifiableMessage,
     signature: [u8; 65],
 ) -> Result<()> {
-    let wallet = &mut ctx.accounts.wallet_state;
-    msg!(
-        "signatures: {:?}, {}",
-        wallet.recent_signatures.inner.map(|data| hex::encode(data)),
-        hex::encode(signature)
-    );
+    let wallet_info = ctx.accounts.wallet_state.to_account_info();
+    let data = wallet_info.try_borrow_mut_data()?;
+    let disc_bytes = array_ref![data, 0, 8].to_owned();
+    drop(data);
+    let mut wallet = match disc_bytes {
+        WalletState::DISCRIMINATOR => ctx.accounts.wallet_state.load_mut()?,
+        _ => {
+            let mut acc = ctx.accounts.wallet_state.load_init()?;
+            acc.initialize(eth_address, ctx.bumps.wallet_state);
+            acc
+        }
+    };
     // Check signature replay
     require!(
         !wallet.has_signature(&signature),
@@ -87,11 +110,6 @@ pub fn verify_signature(
         .map_err(|_| WalletError::InvalidSignature)?;
 
     verify_eth_signature(&message_hash, &signature, &eth_address)?;
-
-    // Initialize if needed
-    if wallet.eth_address == [0u8; 20] {
-        wallet.initialize(eth_address, ctx.bumps.wallet_state);
-    }
 
     // Update state
     wallet.nonce = message.nonce;

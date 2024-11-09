@@ -34,7 +34,7 @@ describe("evm-wallet", () => {
   it("Can verify signature and create wallet", async () => {
     // Create test message
     const message = {
-      nonce: new anchor.BN(1),
+      nonce: 1,
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -73,7 +73,7 @@ describe("evm-wallet", () => {
   it("Prevents replay attacks", async () => {
     // Use the same message and signature from previous test
     const message = {
-      nonce: new anchor.BN(1),  // Same nonce
+      nonce: 1,  // Same nonce
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -107,7 +107,7 @@ describe("evm-wallet", () => {
     // Create message with lower nonce
     const recipient = Keypair.generate().publicKey;
     const message = {
-      nonce: new anchor.BN(0),  // Lower than current nonce (1)
+      nonce: 0,  // Lower than current nonce (1)
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -141,7 +141,7 @@ describe("evm-wallet", () => {
     // Create message with higher nonce
     const recipient = Keypair.generate().publicKey;
     const message = {
-      nonce: new anchor.BN(2),  // Higher than current nonce (1)
+      nonce: 2,  // Higher than current nonce (1)
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),

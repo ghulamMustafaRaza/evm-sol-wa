@@ -177,7 +177,7 @@ export type EvmWallet = {
                     65
                   ]
                 },
-                8
+                20
               ]
             }
           }
@@ -191,7 +191,7 @@ export type EvmWallet = {
         "fields": [
           {
             "name": "nonce",
-            "type": "u64"
+            "type": "u32"
           },
           {
             "name": "actions",
@@ -208,6 +208,10 @@ export type EvmWallet = {
     },
     {
       "name": "walletState",
+      "serialization": "bytemuckunsafe",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "struct",
         "fields": [
@@ -228,7 +232,7 @@ export type EvmWallet = {
             "docs": [
               "Current nonce for transaction ordering"
             ],
-            "type": "u64"
+            "type": "u32"
           },
           {
             "name": "recentSignatures",
@@ -261,18 +265,6 @@ export type EvmWallet = {
               "Bump seed for PDA derivation"
             ],
             "type": "u8"
-          },
-          {
-            "name": "padding",
-            "docs": [
-              "Reserved for future use"
-            ],
-            "type": {
-              "array": [
-                "u8",
-                5
-              ]
-            }
           }
         ]
       }
