@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-evm_wallet = "6z68wfurCMYkZG51s1Et9BJEd9nJGUusjHXNt4dGbNNF"
+evm_wallet = "4RhFdtzGHv2tJz6MJ8vbyPZjhmLC79eCCDmTcXcokKSm"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
@@ -27,6 +27,3 @@ upgradeable = false
 bind_address = "127.0.0.1"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
-
-[toolchain]
-anchor_version = "0.30.0"

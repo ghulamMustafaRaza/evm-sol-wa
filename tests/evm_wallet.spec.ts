@@ -1,8 +1,8 @@
 
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey, Keypair, SystemProgram, ComputeBudgetProgram } from "@solana/web3.js";
-import { EthereumSigner } from "./utils/ethereum";
+import { PublicKey, Keypair, ComputeBudgetProgram } from "@solana/web3.js";
+import { EthereumSigner } from "../src/utils/ethereum";
 import { EvmWallet } from '../target/types/evm_wallet';
 
 

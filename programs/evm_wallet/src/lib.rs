@@ -1,7 +1,7 @@
 mod module;
 use {anchor_lang::prelude::*, module::*};
 
-declare_id!("6z68wfurCMYkZG51s1Et9BJEd9nJGUusjHXNt4dGbNNF");
+declare_id!("4RhFdtzGHv2tJz6MJ8vbyPZjhmLC79eCCDmTcXcokKSm");
 
 #[program]
 pub mod evm_wallet {
