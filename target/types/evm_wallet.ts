@@ -61,10 +61,6 @@ export type EvmWallet = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "secp256k1Program",
-          "address": "KeccakSecp256k11111111111111111111111111111"
         }
       ],
       "args": [

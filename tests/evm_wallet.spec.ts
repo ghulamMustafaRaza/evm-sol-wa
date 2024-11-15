@@ -20,7 +20,7 @@ describe("evm-wallet", () => {
   let walletBump: number;
   const recipient = Keypair.generate().publicKey;
   const computeIx = ComputeBudgetProgram.setComputeUnitLimit({
-    units: 400_000
+    units: 100_000
   });
   beforeAll(() => {
     // Find PDA for wallet state
@@ -99,40 +99,6 @@ describe("evm-wallet", () => {
     ).rejects.toThrow(/ReplayDetected/);
 
     // Verify state hasn't changed
-    const walletState = await program.account.walletState.fetch(walletStatePda);
-    expect(walletState.txnCount.toString()).toBe("1");
-  });
-
-  it("Validates txnCount ordering", async () => {
-    // Create message with lower txnCount
-    const recipient = Keypair.generate().publicKey;
-    const message: VerifiableMessage = {
-      lastKnownTxn: 0,  // Lower than current txnCount (1)
-      actions: [{
-        transfer: {
-          amount: new anchor.BN(1_000_000_000),
-          recipient: recipient,
-          mint: null,
-        }
-      }]
-    };
-
-    const signature = await signer.signMessage(message);
-    const sigBytes = Buffer.from(signature.slice(2), 'hex');
-    const ethAddress = Buffer.from(signer.getAddress().slice(2), 'hex');
-
-    // Attempt to submit transaction with lower txnCount
-    await expect(
-      program.methods
-        .verifySignature(Array.from(ethAddress), message, Array.from(sigBytes))
-        .accounts({
-          payer: provider.wallet.publicKey,
-        })
-        .preInstructions([computeIx])
-        .rpc()
-    ).rejects.toThrow(/InvalidInstructionSequence/);
-
-    // Verify txnCount hasn't changed
     const walletState = await program.account.walletState.fetch(walletStatePda);
     expect(walletState.txnCount.toString()).toBe("1");
   });

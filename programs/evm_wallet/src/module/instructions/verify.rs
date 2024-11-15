@@ -1,5 +1,4 @@
 use super::super::*;
-use anchor_lang::solana_program::secp256k1_program::ID as SECP256K1_PROGRAM_ID;
 use anchor_lang::{prelude::*, Discriminator};
 use solana_nostd_secp256k1_recover::secp256k1_recover;
 
@@ -69,9 +68,6 @@ pub struct VerifySignature<'info> {
     pub payer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
-    /// CHECK:
-    #[account(address = SECP256K1_PROGRAM_ID)]
-    pub secp256k1_program: AccountInfo<'info>,
 }
 
 pub fn verify_signature(
