@@ -6,8 +6,8 @@ pub enum WalletError {
     InvalidSignature,
     #[msg("Transaction replay detected")]
     ReplayDetected,
-    #[msg("Invalid instruction sequence")]
-    InvalidInstructionSequence,
+    #[msg("Transaction too old - can't verify against recent history")]
+    TransactionTooOld,
     #[msg("Invalid action parameters")]
     InvalidActionParameters,
 }

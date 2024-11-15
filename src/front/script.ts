@@ -1,9 +1,9 @@
 import { Connection, PublicKey, ComputeBudgetProgram, Transaction, Keypair, VersionedTransaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { AnchorProvider, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import { ethers, BrowserProvider } from 'ethers';
-import { EthereumSigner } from '@/utils/ethereum';
+import { EthereumSigner, VerifiableMessage } from '@/utils/ethereum';
 import { Buffer } from 'buffer';
-import { EVM_WALLET_PROGRAM_ID, getEvmWalletProgram } from '@/evm-wallet-exports';
+import { EVM_WALLET_PROGRAM_ID, EvmWallet, getEvmWalletProgram } from '@/evm-wallet-exports';
 import { BN } from 'bn.js';
 
 // Your program ID
@@ -15,11 +15,42 @@ class EvmSolanaBridge {
     private metamaskSigner: ethers.JsonRpcSigner | null = null;
     // We'll use a static keypair as payer - in production you might want to manage this differently
     private payerKeypair: Keypair;
-
+    private program: Program<EvmWallet>;
     constructor() {
         this.connection = new Connection(SOLANA_NETWORK);
         // Generate a new keypair for paying transaction fees
         this.payerKeypair = Keypair.generate();
+
+        // Create provider and program
+        const provider = new AnchorProvider(
+            this.connection,
+            {
+                publicKey: this.payerKeypair.publicKey,
+                signTransaction: async <T extends Transaction | VersionedTransaction>(tx: T): Promise<T> => {
+                    if ("version" in tx) {
+                        tx.sign([this.payerKeypair]);
+                    } else {
+                        tx.partialSign(this.payerKeypair);
+                    }
+                    return tx;
+                },
+                signAllTransactions: async <T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> => {
+                    txs.forEach(tx => {
+                        if ("version" in tx) {
+                            tx.sign([this.payerKeypair]);
+                        } else {
+                            tx.partialSign(this.payerKeypair);
+                        }
+                    });
+                    return txs;
+                }
+            },
+            { commitment: 'confirmed' }
+        );
+
+        // Initialize program
+        this.program = getEvmWalletProgram(provider);
+
         this.setupEventListeners();
     }
 
@@ -76,10 +107,11 @@ class EvmSolanaBridge {
                 [Buffer.from("evm_wallet"), ethAddressBytes],
                 PROGRAM_ID
             );
+            const state = await this.program.account.walletState.fetch(walletStatePda, "processed").catch(() => ({ txnCount: 0 }));
 
             // Create message
-            const message = {
-                nonce: Math.floor(Date.now() / 1000), // In production, fetch from program
+            const message: VerifiableMessage = {
+                lastKnownTxn: state.txnCount,
                 actions: [{
                     transfer: {
                         amount: new BN(amount).mul(new BN(LAMPORTS_PER_SOL)), // Convert to lamports
@@ -95,43 +127,13 @@ class EvmSolanaBridge {
 
             this.showStatus('Building Solana transaction...', 'success');
 
-            // Create provider and program
-            const provider = new AnchorProvider(
-                this.connection,
-                {
-                    publicKey: this.payerKeypair.publicKey,
-                    signTransaction: async <T extends Transaction | VersionedTransaction>(tx: T): Promise<T> => {
-                        if ("version" in tx) {
-                            tx.sign([this.payerKeypair]);
-                        } else {
-                            tx.partialSign(this.payerKeypair);
-                        }
-                        return tx;
-                    },
-                    signAllTransactions: async <T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> => {
-                        txs.forEach(tx => {
-                            if ("version" in tx) {
-                                tx.sign([this.payerKeypair]);
-                            } else {
-                                tx.partialSign(this.payerKeypair);
-                            }
-                        });
-                        return txs;
-                    }
-                },
-                { commitment: 'confirmed' }
-            );
-
-            // Initialize program
-            const program = getEvmWalletProgram(provider);
-
             // Set compute budget
             const computeIx = ComputeBudgetProgram.setComputeUnitLimit({
                 units: 400_000
             });
 
             // Send transaction
-            await program.methods
+            await this.program.methods
                 .verifySignature(
                     Array.from(ethAddressBytes),
                     message,

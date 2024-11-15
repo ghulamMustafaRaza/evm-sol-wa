@@ -119,8 +119,8 @@
     },
     {
       "code": 6002,
-      "name": "InvalidInstructionSequence",
-      "msg": "Invalid instruction sequence"
+      "name": "TransactionTooOld",
+      "msg": "Transaction too old - can't verify against recent history"
     },
     {
       "code": 6003,
@@ -184,7 +184,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "nonce",
+            "name": "last_known_txn",
             "type": "u32"
           },
           {
@@ -222,7 +222,7 @@
             }
           },
           {
-            "name": "nonce",
+            "name": "txn_count",
             "docs": [
               "Current nonce for transaction ordering"
             ],

@@ -10,7 +10,7 @@ pub struct WalletState {
     /// The Ethereum address that owns this wallet
     pub eth_address: [u8; 20],
     /// Current nonce for transaction ordering
-    pub nonce: u32,
+    pub txn_count: u32,
     /// Fixed array of recent signatures for replay protection
     pub recent_signatures: RecentTransactions,
     /// Current index in the signature array (circular buffer)
@@ -38,7 +38,7 @@ impl Default for RecentTransactions {
 impl WalletState {
     pub const LEN: usize = 8 + // discriminator
                           20 + // eth_address
-                          8 +  // nonce
+                          8 +  // txn_count
                           RecentTransactions::LEN + // fixed size signature array
                           1 +  // current_index
                           1 +  // num_signatures
@@ -47,7 +47,7 @@ impl WalletState {
 
     pub fn initialize(&mut self, eth_address: [u8; 20], bump: u8) {
         self.eth_address = eth_address;
-        self.nonce = 0;
+        self.txn_count = 0;
         self.current_index = 0;
         self.num_signatures = 0;
         self.bump = bump;
@@ -82,7 +82,7 @@ impl WalletState {
 // Message structures remain AnchorSerialize/Deserialize since they're passed as instruction data
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct VerifiableMessage {
-    pub nonce: u32,
+    pub last_known_txn: u32,
     pub actions: Vec<Action>,
 }
 
@@ -101,7 +101,7 @@ impl VerifiableMessage {
 
         // Use explicit \n instead of writeln!
         output.push_str("EVM Wallet Transaction\n");
-        output.push_str(&format!("Nonce: {}\n", self.nonce));
+        output.push_str(&format!("Last Txn: {}\n", self.last_known_txn));
         output.push_str("\n");
         output.push_str("Actions to perform:\n");
 

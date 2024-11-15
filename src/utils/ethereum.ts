@@ -11,7 +11,7 @@ export interface Action {
 }
 
 export interface VerifiableMessage {
-    nonce: number;
+    lastKnownTxn: number;
     actions: Action[];
 }
 
@@ -37,7 +37,7 @@ export class EthereumSigner {
 
     private formatMessage(message: VerifiableMessage): string {
         let output = `EVM Wallet Transaction\n`;
-        output += `Nonce: ${message.nonce.toString()}\n\n`;
+        output += `Last Txn: ${message.lastKnownTxn.toString()}\n\n`;
         output += `Actions to perform:\n`;
 
         message.actions.forEach((action, i) => {

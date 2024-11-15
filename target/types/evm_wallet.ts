@@ -125,8 +125,8 @@ export type EvmWallet = {
     },
     {
       "code": 6002,
-      "name": "invalidInstructionSequence",
-      "msg": "Invalid instruction sequence"
+      "name": "transactionTooOld",
+      "msg": "Transaction too old - can't verify against recent history"
     },
     {
       "code": 6003,
@@ -190,7 +190,7 @@ export type EvmWallet = {
         "kind": "struct",
         "fields": [
           {
-            "name": "nonce",
+            "name": "lastKnownTxn",
             "type": "u32"
           },
           {
@@ -228,7 +228,7 @@ export type EvmWallet = {
             }
           },
           {
-            "name": "nonce",
+            "name": "txnCount",
             "docs": [
               "Current nonce for transaction ordering"
             ],

@@ -97,10 +97,12 @@ pub fn verify_signature(
         !wallet.has_signature(&signature),
         WalletError::ReplayDetected
     );
-    // Check nonce
+    let txn_diff = wallet.txn_count.saturating_sub(message.last_known_txn) as usize;
+
+    // If diff > SIGNATURE_QUEUE_SIZE, we can't verify against all intervening transactions
     require!(
-        message.nonce > wallet.nonce,
-        WalletError::InvalidInstructionSequence
+        txn_diff <= SIGNATURE_QUEUE_SIZE,
+        WalletError::TransactionTooOld
     );
 
     // Get message hash
@@ -112,7 +114,7 @@ pub fn verify_signature(
     verify_eth_signature(&message_hash, &signature, &eth_address)?;
 
     // Update state
-    wallet.nonce = message.nonce;
+    wallet.txn_count += 1;
     wallet.add_signature(signature);
 
     // Store verification result

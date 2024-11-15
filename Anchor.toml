@@ -12,7 +12,7 @@ evm_wallet = "4RhFdtzGHv2tJz6MJ8vbyPZjhmLC79eCCDmTcXcokKSm"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

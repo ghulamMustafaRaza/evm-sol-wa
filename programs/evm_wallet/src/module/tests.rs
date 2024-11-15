@@ -6,7 +6,7 @@ mod tests {
         use anchor_lang::prelude::Pubkey;
 
         let message = VerifiableMessage {
-            nonce: 1,
+            last_known_txn: 1,
             actions: vec![Action::Transfer {
                 amount: 1_000_000_000,
                 recipient: Pubkey::new_unique(),
@@ -41,7 +41,7 @@ mod tests {
         let test_address = [2u8; 20];
 
         state.initialize(test_address, 1);
-        assert_eq!(state.nonce, 0);
+        assert_eq!(state.txn_count, 0);
         assert_eq!(state.eth_address, test_address);
         assert_eq!(state.current_index, 0);
         assert_eq!(state.num_signatures, 0);
@@ -184,7 +184,7 @@ mod sig_tests {
     fn test_with_ethers() {
         // Create the exact same message as in JS
         let message = VerifiableMessage {
-            nonce: 1,
+            last_known_txn: 1,
             actions: vec![Action::Transfer {
                 amount: 1_000_000_000,
                 recipient: Pubkey::default(),

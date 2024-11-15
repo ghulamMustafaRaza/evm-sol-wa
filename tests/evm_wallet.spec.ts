@@ -2,7 +2,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey, Keypair, ComputeBudgetProgram } from "@solana/web3.js";
-import { EthereumSigner } from "../src/utils/ethereum";
+import { EthereumSigner, VerifiableMessage } from "../src/utils/ethereum";
 import { EvmWallet } from '../target/types/evm_wallet';
 
 
@@ -33,8 +33,8 @@ describe("evm-wallet", () => {
 
   it("Can verify signature and create wallet", async () => {
     // Create test message
-    const message = {
-      nonce: 1,
+    const message: VerifiableMessage = {
+      lastKnownTxn: 1,
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -62,7 +62,7 @@ describe("evm-wallet", () => {
       // Verify wallet state
       const walletState = await program.account.walletState.fetch(walletStatePda);
       expect(Buffer.from(walletState.ethAddress).toString("hex")).toBe(Buffer.from(ethAddress).toString("hex"));
-      expect(walletState.nonce.toString()).toEqual("1");
+      expect(walletState.txnCount.toString()).toEqual("1");
     } catch (err) {
       console.error("Error:", err);
       throw err;
@@ -72,8 +72,8 @@ describe("evm-wallet", () => {
 
   it("Prevents replay attacks", async () => {
     // Use the same message and signature from previous test
-    const message = {
-      nonce: 1,  // Same nonce
+    const message: VerifiableMessage = {
+      lastKnownTxn: 1,  // Same txnCount
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -100,14 +100,14 @@ describe("evm-wallet", () => {
 
     // Verify state hasn't changed
     const walletState = await program.account.walletState.fetch(walletStatePda);
-    expect(walletState.nonce.toString()).toBe("1");
+    expect(walletState.txnCount.toString()).toBe("1");
   });
 
-  it("Validates nonce ordering", async () => {
-    // Create message with lower nonce
+  it("Validates txnCount ordering", async () => {
+    // Create message with lower txnCount
     const recipient = Keypair.generate().publicKey;
-    const message = {
-      nonce: 0,  // Lower than current nonce (1)
+    const message: VerifiableMessage = {
+      lastKnownTxn: 0,  // Lower than current txnCount (1)
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -121,7 +121,7 @@ describe("evm-wallet", () => {
     const sigBytes = Buffer.from(signature.slice(2), 'hex');
     const ethAddress = Buffer.from(signer.getAddress().slice(2), 'hex');
 
-    // Attempt to submit transaction with lower nonce
+    // Attempt to submit transaction with lower txnCount
     await expect(
       program.methods
         .verifySignature(Array.from(ethAddress), message, Array.from(sigBytes))
@@ -132,16 +132,16 @@ describe("evm-wallet", () => {
         .rpc()
     ).rejects.toThrow(/InvalidInstructionSequence/);
 
-    // Verify nonce hasn't changed
+    // Verify txnCount hasn't changed
     const walletState = await program.account.walletState.fetch(walletStatePda);
-    expect(walletState.nonce.toString()).toBe("1");
+    expect(walletState.txnCount.toString()).toBe("1");
   });
 
-  it("Accepts valid higher nonce", async () => {
-    // Create message with higher nonce
+  it("Accepts valid higher txnCount", async () => {
+    // Create message with higher txnCount
     const recipient = Keypair.generate().publicKey;
-    const message = {
-      nonce: 2,  // Higher than current nonce (1)
+    const message: VerifiableMessage = {
+      lastKnownTxn: 2,  // Higher than current txnCount (1)
       actions: [{
         transfer: {
           amount: new anchor.BN(1_000_000_000),
@@ -163,8 +163,8 @@ describe("evm-wallet", () => {
       .preInstructions([computeIx])
       .rpc();
 
-    // Verify nonce was updated
+    // Verify txnCount was updated
     const walletState = await program.account.walletState.fetch(walletStatePda);
-    expect(walletState.nonce.toString()).toBe("2");
+    expect(walletState.txnCount.toString()).toBe("2");
   });
 });
